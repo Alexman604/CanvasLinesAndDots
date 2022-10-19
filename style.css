@@ -1,0 +1,19 @@
+
+.wrapper {
+    border: 1px solid black;
+    width: 70vw;
+    height: auto;
+    margin: 30px auto;
+    padding: 5px;
+}
+
+#canvas-area {
+   
+    border: 1px solid red;
+}
+
+.collapse-button {
+    border: 1px solid red;
+    color: red;
+    
+}
