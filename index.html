@@ -5,13 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Canvas test task</title>
+    <title>Canvas</title>
 </head>
 <body>
-    <div class="wrapper">
-        <canvas oncontextmenu="return false;" id="canvas-area"></canvas>
-        <input  class="collapse-button" type="button" value="collapse lines" onclick="collapse()">
-    </div>
-    <script src="script.js"></script>
+    <div id = "root"> </div>
+        
+    
+    <script type = "module" >
+        import DrawLines from "./script.js";
+        const someElement = document.querySelector("#root")
+        const draw = new DrawLines();
+
+        someElement.append(draw.element)
+    </script>
 </body>
 </html>

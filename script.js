@@ -1,137 +1,170 @@
-const canvasArea = document.getElementById("canvas-area");
-const ctx = canvasArea.getContext("2d");
-canvasArea.width = window.innerWidth * 0.7;
-canvasArea.height = window.innerHeight * 0.8;
-ctx.fillStyle = "red";
+export default class DrawLines {
+  constructor() {
+    this.lines = [];
+    this.dots = [];
+    this.tempDots = [];
+    this.tempLines = [];
+    this.startX = 0;
+    this.startY = 0;
+    this.ctx = {};
+    this.canvasArea = {};
+    this.stretchName = this.stretch.bind(this);
+    this.collapseName = this.collapse.bind(this);
+    this.renderCanvas();
+    this.getCanvas();
+  }
 
-let lines = [];
-(dots = []), (tempDots = []), (startX = 0), (startY = 0);
+  getTemplate() {
+    return `<canvas oncontextmenu="return false;" id="canvas-area"></canvas>
+        <input  class="collapse-button" type="button" value="collapse lines" >`;
+  }
 
-canvasArea.addEventListener("mousedown", drawLine);
+  renderCanvas() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "wrapper";
+    wrapper.innerHTML = this.getTemplate();
+    this.element = wrapper;
+  }
 
-canvasArea.addEventListener("contextmenu", stopMove);
-//function for fist and second click. put start point and activate move listener
-function drawLine(e) {
-  if (startX === 0 && startY === 0 && e.button === 0) {
-    startX = e.offsetX;
-    startY = e.offsetY;
-    canvasArea.addEventListener("mousemove", stretch);
-  } else {
-    if (e.button === 0) {
-      lines.push(startX, startY, e.offsetX, e.offsetY);
-      dots = [...dots, ...tempDots];
-      tempDots = [];
-      stopMove();
-    }
+  getCanvas() {
+    const canvasArea = this.element.querySelector("#canvas-area");
+    this.canvasArea = canvasArea;
+    const collapseButton = this.element.querySelector(".collapse-button");
+    canvasArea.width = window.innerWidth * 0.7;
+    canvasArea.height = window.innerHeight * 0.8;
+    const ctx = canvasArea.getContext("2d");
+    this.ctx = ctx;
+
+    canvasArea.addEventListener("mousedown", (event) => {
+      this.drawLine(event);
+    });
+    canvasArea.addEventListener("contextmenu", () => {
+      this.stopMove();
+    });
+
+    collapseButton.addEventListener("click", this.collapseName);
   }
-}
-//function while event move is active. cls and print all lines and dots (temporary and permanent) every move.
-function stretch(eMove) {
-  stretchLine(eMove, startX, startY);
-}
-function stretchLine(eMove, startX, startY) {
-  ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
-  tempDots = [];
-  drawLines();
-  drawCircles(dots);
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(eMove.offsetX, eMove.offsetY);
-  ctx.stroke();
-  onlineDots(startX, startY, eMove.offsetX, eMove.offsetY, lines);
-  drawCircles(tempDots);
-}
-//while right button clicked. clr (temporary dots and line) and draw permanents lines and dots
-function stopMove() {
-  canvasArea.removeEventListener("mousemove", stretch);
-  ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
-  drawLines();
-  drawCircles(dots);
-  startX = 0;
-  startY = 0;
-}
-//draw lines function from coordinates array
-function drawLines() {
-  for (let i = 0; i <= lines.length - 4; i += 4) {
-    ctx.beginPath();
-    ctx.moveTo(lines[i], lines[i + 1]);
-    ctx.lineTo(lines[i + 2], lines[i + 3]);
-    ctx.stroke();
-  }
-}
-//draw dots function from coordinates array (temporary and permanent)
-function drawCircles(arr) {
-  for (let i = 0; i <= arr.length - 2; i += 2) {
-    ctx.beginPath();
-    ctx.arc(arr[i], arr[i + 1], 4, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-}
-//
-function onlineDots(x3, y3, x4, y4, arr) {
-  for (let i = 0; i <= arr.length - 4; i += 4) {
-    const x1 = arr[i],
-      y1 = arr[i + 1],
-      x2 = arr[i + 2],
-      y2 = arr[i + 3];
-    //school geometry. find cross line coordinates
-    const xCross = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    const yCross = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    //make order
-    const x1max = Math.max(x1, x2);
-    const x1min = Math.min(x1, x2);
-    const x2max = Math.max(x3, x4);
-    const x2min = Math.min(x3, x4);
-    const y1max = Math.max(y1, y2);
-    const y1min = Math.min(y1, y2);
-    const y2max = Math.max(y3, y4);
-    const y2min = Math.min(y3, y4);
-    // check if cross point belongs to both lines
-    if (
-      xCross < canvasArea.width &&
-      xCross > 0 &&
-      yCross < canvasArea.height &&
-      yCross > 0 &&
-      x1max >= xCross &&
-      x1min <= xCross &&
-      y1max >= yCross &&
-      y1min <= yCross &&
-      x2max >= xCross &&
-      x2min <= xCross &&
-      y2max >= yCross &&
-      y2min <= yCross
-    ) {
-      tempDots.push(xCross, yCross);
-    }
-  }
-}
-//collapsing effect function using same functions for lines and dots drawing but from other arrays
-function collapse() {
-  for (let j = 1; j < 80; j++) {
-    let tempLines = [];
-    setTimeout(function interval() {
-      for (let i = 0; i <= lines.length - 4; i += 4) {
-        const x1 = lines[i];
-        const y1 = lines[i + 1];
-        const x2 = lines[i + 2];
-        const y2 = lines[i + 3];
-        const xCenter = (x1 + x2) / 2;
-        const yCenter = (y1 + y2) / 2;
-        const k = 79 - j;
-        const x1new = (xCenter + k * x1) / (1 + k);
-        const y1new = (yCenter + k * y1) / (1 + k);
-        const x2new = (xCenter + k * x2) / (1 + k);
-        const y2new = (yCenter + k * y2) / (1 + k);
-        tempLines.push(x1new, y1new, x2new, y2new);
-        onlineDots(x1new, y1new, x2new, y2new, tempLines);
+
+  drawLine(e) {
+    if (this.startX === 0 && this.startY === 0 && e.button === 0) {
+      this.startX = e.offsetX;
+      this.startY = e.offsetY;
+      this.canvasArea.addEventListener("mousemove", this.stretchName);
+    } else {
+      if (e.button === 0) {
+        this.lines.push(this.startX, this.startY, e.offsetX, e.offsetY);
+        this.dots = [...this.dots, ...this.tempDots];
+        this.tempDots = [];
+        this.stopMove();
       }
-      ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
-      lines = [...tempLines];
-      drawLines();
-      drawCircles(tempDots);
-      tempDots = [];
-      dots = [];
-    }, j * 40);
+    }
+  }
+
+  stopMove() {
+    const canvasArea = this.element.querySelector("#canvas-area");
+    canvasArea.removeEventListener("mousemove", this.stretchName);
+    this.ctx.clearRect(0, 0, canvasArea.width, canvasArea.height);
+    this.drawLines(this.lines);
+    this.drawCircles(this.dots);
+    this.startX = 0;
+    this.startY = 0;
+  }
+
+  stretch(e) {
+    this.ctx.clearRect(0, 0, this.canvasArea.width, this.canvasArea.height);
+    this.tempDots = [];
+    this.drawLines(this.lines);
+    this.drawCircles(this.dots);
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.startX, this.startY);
+    this.ctx.lineTo(e.offsetX, e.offsetY);
+    this.ctx.stroke();
+    this.onlineDots(this.startX, this.startY, e.offsetX, e.offsetY, this.lines);
+    this.drawCircles(this.tempDots);
+  }
+
+  drawLines(lines) {
+    for (let i = 0; i <= lines.length - 4; i += 4) {
+      this.ctx.fillStyle = "red";
+      this.ctx.beginPath();
+      this.ctx.moveTo(lines[i], lines[i + 1]);
+      this.ctx.lineTo(lines[i + 2], lines[i + 3]);
+      this.ctx.stroke();
+    }
+  }
+  drawCircles(arr) {
+    for (let i = 0; i <= arr.length - 2; i += 2) {
+      this.ctx.beginPath();
+      this.ctx.arc(arr[i], arr[i + 1], 4, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
+  }
+
+  onlineDots(x3, y3, x4, y4, arr) {
+    for (let i = 0; i <= arr.length - 4; i += 4) {
+      const x1 = arr[i],
+        y1 = arr[i + 1],
+        x2 = arr[i + 2],
+        y2 = arr[i + 3];
+      const xCross = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+      const yCross = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+      const x1max = Math.max(x1, x2);
+      const x1min = Math.min(x1, x2);
+      const x2max = Math.max(x3, x4);
+      const x2min = Math.min(x3, x4);
+      const y1max = Math.max(y1, y2);
+      const y1min = Math.min(y1, y2);
+      const y2max = Math.max(y3, y4);
+      const y2min = Math.min(y3, y4);
+      if (
+        xCross < this.canvasArea.width &&
+        xCross > 0 &&
+        yCross < this.canvasArea.height &&
+        yCross > 0 &&
+        x1max >= xCross &&
+        x1min <= xCross &&
+        y1max >= yCross &&
+        y1min <= yCross &&
+        x2max >= xCross &&
+        x2min <= xCross &&
+        y2max >= yCross &&
+        y2min <= yCross
+      ) {
+        this.tempDots.push(xCross, yCross);
+      }
+    }
+  }
+
+  collapse() {
+    for (let j = 1; j < 80; j++) {
+      setTimeout(
+        function () {
+          const arr = this.lines;
+          for (let i = 0; i <= arr.length - 4; i += 4) {
+            const x1 = arr[i];
+            const y1 = arr[i + 1];
+            const x2 = arr[i + 2];
+            const y2 = arr[i + 3];
+            const xCenter = (x1 + x2) / 2;
+            const yCenter = (y1 + y2) / 2;
+            const k = 79 - j;
+            const x1new = (xCenter + k * x1) / (1 + k);
+            const y1new = (yCenter + k * y1) / (1 + k);
+            const x2new = (xCenter + k * x2) / (1 + k);
+            const y2new = (yCenter + k * y2) / (1 + k);
+            this.tempLines.push(x1new, y1new, x2new, y2new);
+            this.onlineDots(x1new, y1new, x2new, y2new, this.tempLines);
+          }
+          this.ctx.clearRect(0, 0, this.canvasArea.width, this.canvasArea.height);
+          this.lines = [...this.tempLines];
+          this.drawLines(this.lines);
+          this.drawCircles(this.tempDots);
+          this.tempDots = [];
+          this.dots = [];
+          this.tempLines = [];
+        }.bind(this),
+        j * 40
+      );
+    }
   }
 }
-//The End!!!
